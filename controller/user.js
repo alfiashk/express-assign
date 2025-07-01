@@ -125,7 +125,7 @@ const resetPassword = async (req, res, next) => {
     try {
         const user = await User.findOne({
             resetPasswordToken: token,
-            resetPasswordExpires: { $gt: Date.now() } // not expired
+            resetPasswordExpires: { $gt: Date.now() } 
         });
   
         if (!user) {
