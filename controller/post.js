@@ -1,17 +1,46 @@
 const Post = require("../models/posts");
+const User = require("../models/user");
 
 const getAll = async (req, res, next) => {
     try {
-        let posts = await Post.find({ status: "published" }).populate("author", "-_id username");
+        const { page = 1, limit = 5, author } = req.query;
+        const query = { status: "published" };
     
-        if (!posts) {
-          const error = new Error("No posts available");
-          error.status = 400;
-          return next(error);
+        if (author) {
+            console.log("Looking for author:", author);
+            const user = await User.findOne({ username: author });
+            // console.log(user);
+          
+            if (!user) {
+                const error = new Error("No Author Found");
+                error.status = 404;
+                return next(error);
+            } 
+            
+            query.author = user._id;
         }
     
-        res.status(200).json(posts);
-
+        const posts = await Post.find(query)
+            .populate("author", "username -_id")
+            .skip((parseInt(page) - 1) * (parseInt(limit)))
+            .limit(parseInt(limit));
+        
+        if (posts.length === 0) {
+            const error = new Error("No Posts available");
+            error.status = 404;
+            return next(error);
+        }
+    
+        const total = await Post.countDocuments(query);
+    
+        res.status(200).json({
+          total,
+          totalPages: Math.ceil(total / limit),
+          currentPage: parseInt(page),
+          posts,
+        });
+       
+    
       } catch (err) {
         const error = new Error("Error showing posts");
         error.status = 400;
@@ -42,15 +71,24 @@ const getSinglePosts = async (req, res, next) => {
 
 const myPosts = async (req, res, next) => {
     try {
-        const posts = await Post.find({ author: req.user.id }).populate("author", "-_id username");
-  
-        if (posts.length === 0 ) {
-            const error = new Error("You haven't created any posts yet.");
-            error.status = 400;
-            return next(error);
-        }
-  
-        res.status(200).json({ msg: "Your posts", posts });
+        const { page = 1, limit = 3, startDate, endDate } = req.query;
+
+        const query = { author: req.user.id };
+
+        const posts = await Post.find(query)
+        .populate("author", "username -_id")
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
+
+        const total = await Post.countDocuments(query);
+
+        res.status(200).json({
+        total,
+        totalPages: Math.ceil(total / limit),
+        currentPage: parseInt(page),
+        posts,
+        });
+
 
     } catch (err) {
         const error = new Error("Something went wrong");
