@@ -26,10 +26,8 @@ async function main() {
 
 app.use(express.json());
 
-//register
-app.use("/user",userRoutes );
 
-//login
+app.use("/user",userRoutes );
 app.use('/post',postRoutes );
 
 
