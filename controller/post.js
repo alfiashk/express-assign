@@ -3,11 +3,10 @@ const User = require("../models/user");
 
 const getAll = async (req, res, next) => {
     try {
-        const { page = 1, limit = 5, author } = req.query;
+        const { page = 1, limit = 5, author, postDate } = req.query;
         const query = { status: "published" };
     
         if (author) {
-            console.log("Looking for author:", author);
             const user = await User.findOne({ username: author });
             // console.log(user);
           
@@ -19,11 +18,22 @@ const getAll = async (req, res, next) => {
             
             query.author = user._id;
         }
+
+        if (postDate) {
+            const start = new Date(postDate);
+            start.setHours(0, 0, 0, 0);
+        
+            const end = new Date(postDate);
+            end.setHours(23, 59, 59, 999);
+        
+            query.createdAt = { $gte: start, $lte: end };
+          }
     
         const posts = await Post.find(query)
-            .populate("author", "username -_id")
+            .populate("author", "-_id username ")
             .skip((parseInt(page) - 1) * (parseInt(limit)))
-            .limit(parseInt(limit));
+            .limit(parseInt(limit))
+            .sort({ createdAt: 1 });
         
         if (posts.length === 0) {
             const error = new Error("No Posts available");
@@ -71,7 +81,7 @@ const getSinglePosts = async (req, res, next) => {
 
 const myPosts = async (req, res, next) => {
     try {
-        const { page = 1, limit = 3, startDate, endDate } = req.query;
+        const { page = 1, limit = 3 } = req.query;
 
         const query = { author: req.user.id };
 
@@ -102,7 +112,7 @@ const create = async (req, res, next) => {
     try {
         const userId = req.user.id;
         if (!title || !content) {
-            const error = new Error('please include title and content. Also include status = published to publish the post');
+            const error = new Error('please include title and content. Also include status = published if you want to publish the post');
             error.status = 400;
             return next(error);
         }

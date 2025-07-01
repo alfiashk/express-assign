@@ -18,11 +18,13 @@ const sendEmail = async (to, subject, html) => {
         };
         
         await transporter.sendMail(mailOptions);
-        console.log("Reservation and payment email sent successfully.");
+        // console.log("email sent successfully.");
     
   } catch (err) {
-    console.error("Email sending error:", err);
-     new Error("Failed to send email");
+        // console.error("Email sending error:", err);
+        const error = new Error("Failed to send email");
+        error.status = 500;
+        return next(error);
   }
 };
 

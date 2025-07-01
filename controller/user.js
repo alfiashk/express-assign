@@ -103,8 +103,8 @@ const forgotPassword = async (req, res, next) => {
       user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
       await user.save();
   
-      const resetLink = `http://localhost:3000/user/reset-password/${token}`;
-      const html = `<h3>Reset your password</h3><p>Click the link below:</p><a href="${resetLink}">${resetLink}</a>`;
+      const resetLink = `http://localhost:8000/user/reset-password/${token}`;
+      const html = `<h3>Reset your password</h3><p>Paste the link below in postman:</p><a href="${resetLink}">${resetLink}</a>`;
   
       await sendEmail(user.email, "Password Reset Request", html);
         
