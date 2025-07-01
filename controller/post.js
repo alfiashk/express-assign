@@ -166,6 +166,11 @@ const updatePost = async (req, res) => {
     try {
         const { title, content, status } = req.body;
   
+        if (!title || !content || !status ) {
+            const error = new Error('Please enter the field u want to update: title, content or status to publish post');
+            error.status = 400;
+            return next(error);
+        }
         const post = await Post.findById(req.params.id);
         if (!post) {
             const error = new Error("Post not found");

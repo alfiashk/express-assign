@@ -1,5 +1,5 @@
 const validateEmail = (email, password) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,3}$/;
     return emailRegex.test(email);
   };
   
@@ -8,12 +8,9 @@ const validateEmail = (email, password) => {
     return passwordRegex.test(password);
 };
   
-const checkUserId = (post, userId) => {
-  return post.author.toString() === userId;
-};
-  
+
 module.exports = {
     validateEmail,
-    validatePassword
+  validatePassword
 };
   

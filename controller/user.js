@@ -8,6 +8,12 @@ const sendEmail = require("../services/sendEmail");
 const register = async (req, res, next) => {
     let { username, email, firstName, lastName, password } = req.body;
     try {
+        if (!firstName || !lastName || !email || !username || !password) {
+            const error = new Error('Please enter the fields: username, email, firstName, lastName , password to register');
+            error.status = 400;
+            return next(error);
+        }
+          
         const existingUser = await User.findOne({ email });
         
         if (existingUser) {
@@ -52,6 +58,11 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
     let { loginId, password } = req.body;
     try {
+        if (!loginId || !password) {
+            const error = new Error('Please enter the fields: loginId = email/username & password');
+            error.status = 400;
+            return next(error);
+        }
         const user = await User.findOne({
             $or: [{ email: loginId }, { username: loginId }]
         });
@@ -91,6 +102,11 @@ const login = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
     const { email } = req.body;
     try {
+        if (!email) {
+            const error = new Error('Please enter email');
+            error.status = 400;
+            return next(error);
+        }
       const user = await User.findOne({ email });
         if (!user) {
             const error = new Error('No user with that email');
@@ -123,6 +139,11 @@ const resetPassword = async (req, res, next) => {
     const { newPassword, confirmPassword } = req.body;
   
     try {
+        if (!newPassword || !confirmPassword) {
+            const error = new Error('Please enter the fields: newPassword & confirmPassword');
+            error.status = 400;
+            return next(error);
+        }
         const user = await User.findOne({
             resetPasswordToken: token,
             resetPasswordExpires: { $gt: Date.now() } 
@@ -158,15 +179,14 @@ const resetPassword = async (req, res, next) => {
 //update user
 const updateUser = async (req, res, next) => {
     const { username } = req.params;
-    const { firstName, lastName, email, newUsername } = req.body;
-    
-    if (!firstName || !lastName || !email || !newUsername) {
-        const error = new Error('Please enter the field u want to update: newUsername, email, firstName, lastName');
-        error.status = 400;
-        return next(error);
-    }
-      
+    const { firstName, lastName, email, newUsername } = req.body;  
     try {
+        if (!firstName || !lastName || !email || !newUsername) {
+            const error = new Error('Please enter the field u want to update: newUsername, email, firstName, lastName');
+            error.status = 400;
+            return next(error);
+        }
+        
         const updateFields = {};
         if (firstName) updateFields.firstName = firstName;
         if (lastName) updateFields.lastName = lastName;
