@@ -144,13 +144,9 @@ const resetPassword = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
-        const user = await User.findOne({
-            resetPasswordToken: token,
-            resetPasswordExpires: { $gt: Date.now() } 
-        });
-  
-        if (!user) {
-            const error = new Error('user does not exists');
+
+        if (!validatePassword(newPassword)) {
+            const error = new Error('Password must have 1 uppercase, 1 special char, 1 number, min 6 chars');
             error.status = 400;
             return next(error);
         }
@@ -160,6 +156,19 @@ const resetPassword = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
+
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() } 
+        });
+  
+        if (!user) {
+            const error = new Error('token expired or user not found');
+            error.status = 400;
+            return next(error);
+        }
+        
+       
             
         const hashed = await bcrypt.hash(newPassword, 12);
         user.password = hashed;
@@ -186,7 +195,7 @@ const updateUser = async (req, res, next) => {
             error.status = 400;
             return next(error);
         }
-        
+
         const updateFields = {};
         if (firstName) updateFields.firstName = firstName;
         if (lastName) updateFields.lastName = lastName;

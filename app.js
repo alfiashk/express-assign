@@ -32,8 +32,8 @@ app.use('/post',postRoutes );
 
 
 //Error Handler
-app.use(notFound);
-app.use(errorHandler);
+// app.use(notFound);
+// app.use(errorHandler);
 
 //root
 app.get("/", (req, res) => {

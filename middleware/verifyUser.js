@@ -1,15 +1,17 @@
 const Post = require("../models/posts");
+const Draft = require("../models/draft");
+
 
 const isOwner = async (req, res, next) => {
   try {
-    const post = await Post.findById(req.params.id);
-      if (!post) { 
-          const error = new Error("Post not Found");
+    const draft = await Draft.findById(req.params.id);
+      if (!draft) { 
+          const error = new Error("Draft not Found");
           error.status = 404;
           return next(error);
       }
 
-      if (post.author.toString() !== req.user.id) {
+      if (draft.author.toString() !== req.user.id) {
           const error = new Error("Unauthorized User");
           error.status = 400;
           return next(error);
