@@ -122,37 +122,17 @@ const create = async (req, res, next) => {
             return next(error);
         }
 
-        let populatedPost = null;
-        let populatedDraft = null;
-        
-        if (status === "published") {
             const newPost = await Post.create({
                 title,
                 content,
                 publishAt : new Date(),
-                status: status,
+                status: status || "draft",
                 author: userId
             });
             
-            populatedPost = await Post.findById(newPost._id).populate("author", "-_id username");
-
-        } else {
-            const newDraft = await Draft.create({
-                title,
-                content,
-                postId: null,
-                publishAt: null,
-                status,
-                author: userId
-            });
-            
-            populatedDraft = await Draft.findById(newDraft._id).populate("author", "-_id username");
-
-        }
+            populatedPost = await Post.findById(newPost._id).populate("author", "username"); 
         
-
-        
-        res.status(200).json({ msg: "Blog created", blog: populatedPost || populatedDraft });
+        res.status(200).json({ msg: "Blog created", blog: populatedPost });
     
     } catch (err) {
         const error = new Error(err.message);
@@ -164,29 +144,19 @@ const create = async (req, res, next) => {
 
 const publishPost = async (req, res, next) => {
     try {
-
-        const draft = await Draft.findById(req.params.id);
-        if (!draft) { 
-            const error = new Error("Draft not found");
+        const post = await Post.findById(req.params.id);
+        if (!post) { 
+            const error = new Error("Post not found");
             error.status = 404;
             return next(error);
         } 
-
-        const newPost = await Post.create({
-            title: draft.title,
-            content: draft.content,
-            publishAt : new Date(),
-            status: "published",
-            author: draft.author
-        });
       
-       
+        post.status = "published";
+        post.publishAt = new Date();
   
-        const populated = await Post.findById(newPost._id).populate("author", "-_id username");
+        await post.save();
+        const populated = await Post.findById(post._id).populate("author", "-_id username");
   
-        await Draft.findByIdAndDelete(draft._id);
-
-
         res.status(200).json({ msg: "Post published", populated });
   
     } catch (err) {
@@ -195,6 +165,8 @@ const publishPost = async (req, res, next) => {
             return next(error)
     }
 };
+
+
 
 const updatePost = async (req, res, next) => {
     try {
@@ -216,7 +188,7 @@ const updatePost = async (req, res, next) => {
         let draft = await Draft.findOne({ postId: req.params.id });
 
         if (status === "published") {
-            // Update main post and remove draft
+            
             post.title = title || post.title;
             post.content = content || post.content;
             post.status = "published";
@@ -231,7 +203,7 @@ const updatePost = async (req, res, next) => {
             return res.status(200).json({ msg: "Post updated and published", post: populated });
 
         } else {
-            // Save as draft
+            
             if (!draft) {
                 draft = new Draft({
                     title: title || post.title,
@@ -258,7 +230,6 @@ const updatePost = async (req, res, next) => {
     }
 };
 
-// const updateDraft =
 
 const deletePost = async (req, res, next) => {
     const  id  = req.params.id;
